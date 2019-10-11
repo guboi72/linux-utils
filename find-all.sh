@@ -33,23 +33,21 @@ if [[ -z "${SEARCHPATH}" ]]; then
 fi
 
 if [[ -z "${EXTENSION}" ]]; then
-    EXTENSION=""
+    EXTENSION="*"
 fi
 
 echo "FILE EXTENSION  = ${EXTENSION}"
 echo "SEARCH PATH     = ${SEARCHPATH}"
 echo "PATTERNS        = ${PATTERNS[@]}"
 
-files_count=$(ls -1 "${SEARCHPATH}"/*"${EXTENSION}" | wc -l)
-
 GREP_TEMP_CMD=""
 n=1
 for pattern in ${PATTERNS[@]}; do
 
     if [[ $n -eq 1 ]]; then
-        GREP_TEMP_CMD+="grep -lr \"${pattern}\" ${SEARCHPATH}"
+        GREP_TEMP_CMD+="grep -lri --include=\*.${EXTENSION} -e \"${pattern}\" ${SEARCHPATH}"
     else
-        GREP_TEMP_CMD+="xargs grep -l \"${pattern}\""
+        GREP_TEMP_CMD+="xargs grep -li -e \"${pattern}\""
     fi
     if [[ $n -ne ${#PATTERNS[@]} ]]; then
         GREP_TEMP_CMD+=" | "
@@ -57,12 +55,6 @@ for pattern in ${PATTERNS[@]}; do
     n=$((n+1))
 done
 
-echo "Number of files matching the patterns:" $files_count
-if [[ -n $1 ]]; then
-    echo "Last line of file specified as non-opt/last argument:"
-    tail -1 "$1"
-fi
-
-ls -a $($GREP_TEMP_CMD) | cut -d " " -f 4 
-
+echo $GREP_TEMP_CMD
+eval $GREP_TEMP_CMD
 exit 0
